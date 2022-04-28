@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+#conda config file
+.conda_config
+
+# Bot tokens
+/tokens
