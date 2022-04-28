@@ -27,4 +27,10 @@ async def on_member_join(member):
         f'Hi {member.name}, welcome to my Neurosistemas lab server!'
     )
 
+@client.event
+async def on_message(message):
+    if message.content == client.user.name:
+        response = f"A sus servicios Sr(a) {message.author.name}."
+        await message.channel.send(response)
+
 client.run(TOKEN)
