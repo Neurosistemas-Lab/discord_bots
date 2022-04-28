@@ -44,6 +44,9 @@ async def test(ctx, *args):
 
 @bot.command(name='Alancito')
 async def on_alancito(ctx):
+    """
+    response if alancito is called
+    """
     possible_response = [
             f"A sus servicios Sr(a) {ctx.author.name}.",
             "yes, commander?"
