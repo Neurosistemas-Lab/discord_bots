@@ -132,4 +132,4 @@ dmypy.json
 .conda_config
 
 # Bot tokens
-/tokens
+.env
