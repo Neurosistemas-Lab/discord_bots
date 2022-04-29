@@ -21,7 +21,7 @@ class CommandErrHandler(commands.Cog):
             The Exception raised.
         """
         if isinstance(error, discord.ext.commands.CommandNotFound):
-            await ctx.send('I do not know that command?!')
+            await ctx.send('Say what??! I do not know that command :(')
         else:
             print('Ignoring exception in command {}:'.format(ctx.command), file=sys.stderr)
             traceback.print_exception(type(error), error, error.__traceback__, file=sys.stderr)
