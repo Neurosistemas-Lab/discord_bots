@@ -9,51 +9,57 @@ import random
 
 from discord.ext import commands
 from dotenv import load_dotenv
+#from HappyBirthday import HappyBirthday
 
 load_dotenv()
 TOKEN = os.getenv('ALANCITO_TOKEN')
 GUILD = os.getenv('NEUROSISTEMAS_GUILD')
+class Alancito(commands):
+    def __init__(self):
+        self.bot = commands.Bot(command_prefix='!')
+        print(self.bot)
+        pass
+        #self.happy_birthday = HappyBirthday()
 
-#client = discord.Client()
-bot = commands.Bot(command_prefix='!')
+    def run(self):
+        bot.run(TOKEN)
 
-#@client.event
-@bot.event
-async def on_ready():
-    print(f'{bot.user.name} has connected to Discord!')
+    def check_bd(self):
+        bot.happy_birthday.check_birth()
 
-#@client.event
-@bot.event
-async def on_member_join(member):
-    """
-    say hito new memebers
-    """
-    await member.create_dm()
-    await member.dm_channel.send(
-        f'Hi {member.name}, welcome to my Neurosistemas lab server!'
-    )
+    @bot.event
+    async def on_ready(self):
+        print(f'{bot.user.name} has connected to Discord!')
 
-"""
-@client.event
-async def on_message(message):
-    if message.content == client.user.name:
-        response = "A su servicio {message.author} {message.__attr__}"
+    @bot.event
+    async def on_member_join(self, member):
+        """
+        say hito new memebers
+        """
+        await member.create_dm()
+        await member.dm_channel.send(
+            f'Hi {member.name}, welcome to my Neurosistemas lab server!'
+        )
 
-        await message.channel.send(response)
-"""
+    @bot.command()
+    async def test(self, ctx, *args):
+        await ctx.send('{} arguments: {}'.format(len(args), ', '.join(args)))
 
-@bot.command()
-async def test(ctx, *args):
-    await ctx.send('{} arguments: {}'.format(len(args), ', '.join(args)))
+    @bot.command(name='Alancito')
+    async def on_alancito(self, ctx):
+        possible_response = [
+                f"A sus servicios Sr(a) {ctx.author.server_name}.",
+                "yes, commander?"
+                ]
+        response = random.choice(possible_response) 
+        await ctx.send(response)
 
-@bot.command(name='Alancito')
-async def on_alancito(ctx):
-    possible_response = [
-            f"A sus servicios Sr(a) {message.author.server_name}.",
-            "yes, commander?"
-            ]
-    response = random.choice(possible_response) 
-    await ctx.send(response)
+    @bot.command(name="hb")
+    async def hb_commands(self, ctx, *args):
+        pass
+        
 
-#client.run(TOKEN)
-bot.run(TOKEN)
+
+#if __name__ == '__main__':
+#    alancito = Alancito()
+#    alancito.run()
