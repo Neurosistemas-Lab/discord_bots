@@ -1,4 +1,5 @@
 import discord
+from discord.ext import tasks
 import numpy as np
 
 class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
@@ -24,8 +25,8 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         pass
 
     # is there a specific decorator for checking time??
-    # maybe a specific listener? (that would be great)
-    @discord.ext.commands.command(name="check_birth")
+    #https://discordpy.readthedocs.io/en/stable/ext/tasks/index.html
+    @tasks.loop(minutes=1440)
+    #@discord.ext.commands.command(name="check_birth")
     async def check_birth(self, ctx, *args):
         pass
-
