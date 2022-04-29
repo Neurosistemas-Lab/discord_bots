@@ -17,4 +17,4 @@ class Test(discord.ext.commands.Cog, name='Test module'):
         """
         ping request
         """
-        await ctx.send(f"pong! still working ;)")
+        await ctx.send(f"pong! still working :yum:")
