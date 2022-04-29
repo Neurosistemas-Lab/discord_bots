@@ -12,6 +12,7 @@ from bots.alancito import Alancito
 from cogs.command_err_handler import CommandErrHandler
 from cogs.greetings import Greetings
 from cogs.happy_birthday import HappyBirthday
+from cogs.important_links import ImportantLinks
 from cogs.test import Test
 
 COMMAND_PREFIX = "!"
@@ -32,6 +33,7 @@ def main():
     bot.add_cog(CommandErrHandler(bot))
     bot.add_cog(Greetings(bot))
     bot.add_cog(HappyBirthday(bot))
+    bot.add_cog(ImportantLinks(bot))
     bot.add_cog(Test(bot))
 
     bot.run(TOKEN)
