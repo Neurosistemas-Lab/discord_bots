@@ -33,6 +33,11 @@ def add_link(yaml_obj, path=LINKS_PATH):
 def rm_link(name_link, current_links, path=LINKS_PATH):
     """
     remove a link
+    Parameters:
+    -----------
+    name_link:      str
+    current_links:  dict
+        dict with current links
     """
     flag = 0  # Everything works well
     if name_link in current_links.keys():
@@ -55,6 +60,8 @@ class ImportantLinks(discord.ext.commands.Cog, name='ImportantLinks module'):
         get important links
         """
         mode = args[0]  # list or set
+        
+        ## list links
         if mode == "list":
             # list all links
             all_links = []
@@ -62,7 +69,13 @@ class ImportantLinks(discord.ext.commands.Cog, name='ImportantLinks module'):
                 all_links.append(link_name)
             response = f"{ctx.author.name} estos son los links disponibles: " \
                 f"{all_links}"
+        
+        # add new link
         elif mode == "add":
+            if len(args)!=3:
+                msg = f"La función add requieres un nombre de link y un link" \
+                        "Ejemplo: **!link add test www.test.com**"
+                await ctx.send(msg)
             name_link = args[1]
             link = args[2]
             link_dict = {name_link: link}
@@ -71,6 +84,8 @@ class ImportantLinks(discord.ext.commands.Cog, name='ImportantLinks module'):
             self.links = read_links()
             response = f"{ctx.author.name}, link *{name_link}* " \
                 "ha sido incluido a la lista"
+
+        # remove a link
         elif mode == "remove":
             name_link = args[1]
             fail = rm_link(name_link=name_link, current_links=self.links)
@@ -83,6 +98,8 @@ class ImportantLinks(discord.ext.commands.Cog, name='ImportantLinks module'):
                 self.links = read_links()
                 response = f"{ctx.author.name}, link *{name_link}* " \
                     "ha sido removido a la lista"
+
+        # default mode: given a name_link answer with the link 
         else:
             link_name = args[0]
             try:
