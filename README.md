@@ -9,7 +9,7 @@ clone the repo and do:
  
 # Heroku
 
-We can use (heroku)[https://devcenter.heroku.com/] as a free hosting service  
+We can use [heroku](https://devcenter.heroku.com/) as a free hosting service  
 
 ## useful commands:
 get logs:  
