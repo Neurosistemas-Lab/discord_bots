@@ -35,7 +35,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         )
         self.birthdays["birth"] = pd.to_datetime(self.birthdays["birth"], dayfirst=True)
         print(self.birthdays)
-        self.check_birth.start()
+        self.check_loop_birth.start()
 
     @discord.ext.commands.command(name="add_birth")
     async def add_birth(self, ctx, message, *args):
@@ -88,7 +88,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         await ctx.send(ctx.channel)
 
     @tasks.loop(hours=24)
-    async def check_birth(self, *args):
+    async def check_loop_birth(self, *args):
         """
         check if there is a birthday today
         """
@@ -102,8 +102,8 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         else:
             await channel.send("No birthday today")
 
-    @check_birth.before_loop
-    async def before_check_birth(self):
+    @check_loop_birth.before_loop
+    async def before_check_loop_birth(self):
         print('Waiting Alancito to connect...')
         await self.bot.wait_until_ready()
         print("Waiting cycle")
