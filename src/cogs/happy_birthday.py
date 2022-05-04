@@ -29,8 +29,9 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
 
         def check(msg):
             return msg.author == ctx.author
-            
+        print(msg.author, ctx.author)
         message = await self.bot.wait_for('message', check=check)
+        print(message)
         try:
             date = pd.to_datetime(message, dayfirst=True)
             self.birthdays.loc[message.author.id] = [date, message.author.name]
