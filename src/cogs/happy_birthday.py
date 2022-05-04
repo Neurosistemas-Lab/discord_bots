@@ -108,4 +108,18 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         await self.bot.wait_until_ready()
         print("Waiting cycle")
         await asyncio.sleep(seconds_until(0, 0))
-        
+
+    @discord.ext.commands.command(name="check_birth")
+    async def check_birth(self, *args):
+        """
+        check if there is a birthday today
+        """
+        channel = await self.bot.fetch_channel(BIRTHDAY_CHANNEL)
+        today = datetime.now()
+        today = today.replace(hour=0, minute=0, second=0, microsecond=0)
+        today = today.strftime("%d/%m/%Y")
+        if not self.birthdays[self.birthdays["birth"] == pd.to_datetime(today, dayfirst=True)].empty:
+            await channel.send(self.birthdays[self.birthdays["birth"] == pd.to_datetime(today, dayfirst=True)])
+            await channel.send("Happy birthday! :partying_face:")
+        else:
+            await channel.send("No birthday today")
