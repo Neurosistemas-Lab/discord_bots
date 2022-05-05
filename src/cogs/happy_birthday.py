@@ -24,6 +24,7 @@ def seconds_until(hours, minutes):
     if target < now:
         target += timedelta(days=1)
     return (target - now).total_seconds()
+    
 class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     def __init__(self, bot):
         self.bot = bot
