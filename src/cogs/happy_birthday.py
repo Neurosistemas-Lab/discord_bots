@@ -7,13 +7,13 @@ import datetime as dt
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 import asyncio
+import psycopg2
 
 from discord.ext import tasks
 
 load_dotenv()
 BIRTHDAY_CHANNEL = os.getenv("BIRTHDAY_CHANNEL")
-# path to birthdays file
-BIRTHDAYS_FILE = os.path.join(os.getcwd(), "data", "birthdays.csv")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 def seconds_until(hours, minutes):
     """
@@ -28,23 +28,36 @@ def seconds_until(hours, minutes):
 class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     def __init__(self, bot):
         self.bot = bot
-        self.birthdays = pd.read_csv(BIRTHDAYS_FILE, 
-                                    delimiter=';', 
-                                    names=["id", "birth", "name"], 
-                                    header=None, 
-                                    index_col="id"
-        )
-        self.birthdays["birth"] = pd.to_datetime(self.birthdays["birth"], dayfirst=True)
-        print(self.birthdays)
+        self.conn = psycopg2.connect(DATABASE_URL, sslmode='require')
         self.check_loop_birth.start()
 
     @discord.ext.commands.command(name="add_birth")
     async def add_birth(self, ctx, message, *args):
         try:
-            date = pd.to_datetime(message, dayfirst=True)
-            self.birthdays.loc[ctx.message.author.id] = [date, ctx.message.author.display_name]
+            cur = self.conn.cursor()
+            date = pd.to_datetime(message, dayfirst=True).to_pydatetime().strftime("%Y-%m-%d")
+            cur.execute(
+                """INSERT INTO birthdays (birth, member_name) VALUES(%s, %s);""", 
+                (date, ctx.message.author.display_name)
+            )
+            self.conn.commit()
+            cur.close()
             await ctx.send("Birthday added!")
-            print(self.birthdays)
+        except:
+            await ctx.send("Something went wrong with your birthday format. Please enter your birthday in dd/mm/yy format")
+
+    @discord.ext.commands.command(name="add_birth_by_name")
+    async def add_birth_by_name(self, ctx, message, *args):
+        try:
+            cur = self.conn.cursor()
+            date = pd.to_datetime(message, dayfirst=True).to_pydatetime().strftime("%Y-%m-%d")
+            cur.execute(
+                """INSERT INTO birthdays (birth, member_name) VALUES(%s, %s);""", 
+                (date, args[0])
+            )
+            self.conn.commit()
+            cur.close()
+            await ctx.send("Birthday added!")
         except:
             await ctx.send("Something went wrong with your birthday format. Please enter your birthday in dd/mm/yy format")
 
@@ -53,18 +66,27 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         """
         list all birthdays
         """
-        await ctx.send(self.birthdays)
+        cur = self.conn.cursor()
+        cur.execute("SELECT * FROM birthdays;")
+        await ctx.send(cur.fetchall())
+        self.conn.commit()
+        cur.close()
 
     @discord.ext.commands.command(name="remove_birth")
     async def remove_birth(self, ctx, message, *args):
         """
         remove birthday from name
         """
-        if not self.birthdays[self.birthdays["name"] == message].empty:
-            self.birthdays = self.birthdays[self.birthdays["name"] != message]
+        try:
+            cur = self.conn.cursor()
+            cur.execute(
+                """DELETE FROM birthdays WHERE member_name = %s;""",
+                (message,)
+            )
+            self.conn.commit()
+            cur.close()
             await ctx.send("Birthday removed!")
-            print(self.birthdays)
-        else:
+        except:
             await ctx.send("Something went wrong with the name. Please enter the name of the person you want to remove and try again.")
 
     @discord.ext.commands.command(name="get_birth_from_name")
@@ -72,14 +94,52 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         """
         get birthday from name
         """
-        await ctx.send(self.birthdays[self.birthdays["name"] == message])
+        try:
+            cur = self.conn.cursor()
+            cur.execute(
+                """SELECT birth, member_name FROM birthdays WHERE member_name = %s;""",
+                (message,)
+            )
+            await ctx.send(cur.fetchall())
+            self.conn.commit()
+            cur.close()
+        except:
+            await ctx.send("Something went wrong with the name. Please enter the name of the person you want to get birth.")
 
     @discord.ext.commands.command(name="get_birth_from_date")
     async def get_birth_from_date(self, ctx, message, *args):
         """
         get birthday from date
         """
-        await ctx.send(self.birthdays[self.birthdays["birth"] == pd.to_datetime(message, dayfirst=True)])
+        try:
+            cur = self.conn.cursor()
+            cur.execute(
+                """SELECT birth, member_name FROM birthdays WHERE birth = %s;""",
+                (message,)
+            )
+            await ctx.send(cur.fetchall())
+            self.conn.commit()
+            cur.close()
+        except:
+            await ctx.send("Something went wrong with the date. Please enter the date you want to get birth.")
+
+    @discord.ext.commands.command(name="get_birth_from_month")
+    async def get_birth_from_month(self, ctx, message, *args):
+        """
+        get birthday from month
+        """
+        try:
+            cur = self.conn.cursor()
+            cur.execute(
+                """SELECT birth, member_name FROM birthdays WHERE EXTRACT(MONTH FROM birth) = %s;""",
+                (message,)
+            )
+            await ctx.send(cur.fetchall())
+            self.conn.commit()
+            cur.close()
+        except:
+            await ctx.send("Something went wrong with the month. Please enter the month you want to get birth.")
+
 
     @discord.ext.commands.command(name="get_channel")
     async def get_channel(self, ctx, *args):
@@ -87,6 +147,21 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         get channel
         """
         await ctx.send(ctx.channel)
+
+    @discord.ext.commands.command(name="get_time")
+    async def get_time(self, ctx, *args):
+        """
+        get time
+        """
+        timestamp = datetime.now()
+        await ctx.send(timestamp.strftime(r"%I:%M %p"))
+
+    @discord.ext.commands.command(name="seconds_until")
+    async def seconds_until(self, ctx, *args):
+        """
+        get time until hour and minutes
+        """
+        await ctx.send(seconds_until(int(args[0]), int(args[1])))
 
     @tasks.loop(hours=24)
     async def check_loop_birth(self, *args):
@@ -108,7 +183,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         print('Waiting Alancito to connect...')
         await self.bot.wait_until_ready()
         print("Waiting cycle")
-        await asyncio.sleep(seconds_until(0, 0))
+        await asyncio.sleep(seconds_until(4, 1))
 
     @discord.ext.commands.command(name="check_birth")
     async def check_birth(self, *args):
