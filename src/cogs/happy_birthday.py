@@ -33,6 +33,10 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
 
     @discord.ext.commands.command(name="add_birth")
     async def add_birth(self, ctx, message, *args):
+        """
+        Add a birthday to the database
+        format: !add_birth <date>
+        """
         try:
             cur = self.conn.cursor()
             date = pd.to_datetime(message, dayfirst=True).to_pydatetime().strftime("%Y-%m-%d")
@@ -48,6 +52,10 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
 
     @discord.ext.commands.command(name="add_birth_by_name")
     async def add_birth_by_name(self, ctx, message, *args):
+        """
+        Adds a birthday by name
+        format: !add_birth_by_name <date> <name>
+        """
         try:
             cur = self.conn.cursor()
             date = pd.to_datetime(message, dayfirst=True).to_pydatetime().strftime("%Y-%m-%d")
@@ -65,6 +73,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def list_birth(self, ctx, *args):
         """
         list all birthdays
+        format: !list_birth
         """
         cur = self.conn.cursor()
         cur.execute("SELECT * FROM birthdays;")
@@ -76,6 +85,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def remove_birth(self, ctx, message, *args):
         """
         remove birthday from name
+        format: !remove_birth <name>
         """
         try:
             cur = self.conn.cursor()
@@ -93,6 +103,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def get_birth_from_name(self, ctx, message, *args):
         """
         get birthday from name
+        format: !get_birth_from_name <name>
         """
         try:
             cur = self.conn.cursor()
@@ -110,6 +121,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def get_birth_from_date(self, ctx, message, *args):
         """
         get birthday from date
+        format: !get_birth_from_date <date>
         """
         try:
             cur = self.conn.cursor()
@@ -127,6 +139,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def get_birth_from_month(self, ctx, message, *args):
         """
         get birthday from month
+        format: !get_birth_from_month <month>
         """
         try:
             cur = self.conn.cursor()
@@ -145,6 +158,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def get_channel(self, ctx, *args):
         """
         get channel
+        format: !get_channel
         """
         await ctx.send(ctx.channel)
 
@@ -152,6 +166,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def get_time(self, ctx, *args):
         """
         get time
+        format: !get_time
         """
         timestamp = datetime.now()
         await ctx.send(timestamp.strftime(r"%I:%M %p"))
@@ -160,6 +175,7 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
     async def seconds_until(self, ctx, *args):
         """
         get time until hour and minutes
+        format: !seconds_until <hour> <minute>
         """
         await ctx.send(seconds_until(int(args[0]), int(args[1])))
 
@@ -171,12 +187,17 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         channel = await self.bot.fetch_channel(BIRTHDAY_CHANNEL)
         today = datetime.now()
         today = today.replace(hour=0, minute=0, second=0, microsecond=0)
-        today = today.strftime("%d/%m/%Y")
-        if not self.birthdays[self.birthdays["birth"] == pd.to_datetime(today, dayfirst=True)].empty:
-            await channel.send(self.birthdays[self.birthdays["birth"] == pd.to_datetime(today, dayfirst=True)])
-            await channel.send("Happy birthday! :partying_face:")
-        else:
-            await channel.send("No birthday today")
+        today = today.strftime("%d/%m")
+        day, month = today.split("/")
+        cur = self.conn.cursor()
+        cur.execute(
+            """SELECT birth, member_name FROM birthdays WHERE EXTRACT(MONTH FROM birth) = %s AND EXTRACT(DAY FROM birth) = %s;""",
+            (month, day,)
+        )
+        birthdays = cur.fetchall()
+        if birthdays:
+            for birthday in birthdays:
+                await channel.send(f"Happy birthday {birthday[-1]}! :partying_face:")
 
     @check_loop_birth.before_loop
     async def before_check_loop_birth(self):
@@ -186,16 +207,26 @@ class HappyBirthday(discord.ext.commands.Cog, name='HappyBirthday module'):
         await asyncio.sleep(seconds_until(4, 1))
 
     @discord.ext.commands.command(name="check_birth")
-    async def check_birth(self, *args):
+    async def check_birth(self, ctx, *args):
         """
         check if there is a birthday today
+        format: !check_birth <date[dd/mm]>
         """
         channel = await self.bot.fetch_channel(BIRTHDAY_CHANNEL)
         today = datetime.now()
         today = today.replace(hour=0, minute=0, second=0, microsecond=0)
-        today = today.strftime("%d/%m/%Y")
-        if not self.birthdays[self.birthdays["birth"] == pd.to_datetime(today, dayfirst=True)].empty:
-            await channel.send(self.birthdays[self.birthdays["birth"] == pd.to_datetime(today, dayfirst=True)])
-            await channel.send("Happy birthday! :partying_face:")
-        else:
+        today = today.strftime("%d/%m")
+        day, month = today.split("/")
+        cur = self.conn.cursor()
+        cur.execute(
+            """SELECT birth, member_name FROM birthdays WHERE EXTRACT(MONTH FROM birth) = %s AND EXTRACT(DAY FROM birth) = %s;""",
+            (month, day,)
+        )
+        birthdays = cur.fetchall()
+        if not birthdays:
             await channel.send("No birthday today")
+        else:
+            for birthday in birthdays:
+                await channel.send(f"Happy birthday {birthday[-1]}! :partying_face:")
+        self.conn.commit()
+        cur.close()
