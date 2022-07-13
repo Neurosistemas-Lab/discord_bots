@@ -99,6 +99,14 @@ class ImportantLinks(discord.ext.commands.Cog, name='ImportantLinks module'):
                 response = f"{ctx.author.name}, link *{name_link}* " \
                     "ha sido removido a la lista"
 
+        # remove a link
+        elif mode == "help":
+            response = f"{ctx.author.name}, link methods (do: !link *method*): \n" \
+                "**list** list all links. No args. \n" \
+                "**add** add new link. Args: *link_name* *url*. \n" \
+                "**remove** remove link. Args: *link_name*. \n" \
+                "**link_name** returns *links_url*" 
+            
         # default mode: given a name_link answer with the link 
         else:
             link_name = args[0]
@@ -109,5 +117,6 @@ class ImportantLinks(discord.ext.commands.Cog, name='ImportantLinks module'):
             except Exception:
                 response = f"{ctx.author.name}, no hay link asociado a " \
                     f"*{link_name}*. Escribe **!link list** para obtener " \
-                    "una lista de links importantes"
+                    "una lista de links importantes, o **!link help** para " \
+                    "obtener información sobre los métodos asociados a link"
         await ctx.send(response)
